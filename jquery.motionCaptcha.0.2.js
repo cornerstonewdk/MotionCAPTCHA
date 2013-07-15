@@ -12,12 +12,12 @@
  * 
  * Incoporates other open source projects, attributed below.
  */
-jQuery.fn.motionCaptcha || (function($) {
+jQuery.fn.motioncaptcha || (function($) {
 	
 	/**
 	 * Main plugin function definition
 	 */
-	$.fn.motionCaptcha = function(options) {
+	$.fn.motioncaptcha = function(options) {
 		
 		/**
 		 * Act on matched form element:
@@ -26,7 +26,7 @@ jQuery.fn.motionCaptcha || (function($) {
 		return this.each(function() {
 				
 			// Build main options before element iteration:
-			var opts = $.extend({}, $.fn.motionCaptcha.defaults, options);
+			var opts = $.extend({}, $.fn.motioncaptcha.defaults, options);
 			
 			// Ensure option ID params are valid #selectors:
 			opts.actionId = '#' + opts.actionId.replace(/\#/g, '');
@@ -119,6 +119,8 @@ jQuery.fn.motionCaptcha || (function($) {
 				// Add the first point to the points array:
 				_points = [NewPoint(x, y)];
 
+				//start 이벤트 추가
+				$canvas.trigger( e = $.Event( 'start.cs.motionCaptcha' ) );
 				return false;
 			}; // mousedown/touchstart event
 
@@ -143,6 +145,9 @@ jQuery.fn.motionCaptcha || (function($) {
 					
 					// Do brushstroke:
 					brush.stroke(x, y);
+					
+					// move 이벤트 추가
+					$canvas.trigger( e = $.Event( 'move.cs.motionCaptcha' ) );
 				}
 				return false;
 			}; // mousemove/touchmove event
@@ -175,10 +180,12 @@ jQuery.fn.motionCaptcha || (function($) {
 							// Write success message into canvas:
 							ctx.fillText(opts.successMsg, 10, 24);
 							
+							// success 이벤트 추가							
+							$canvas.trigger( e = $.Event( 'success.cs.motionCaptcha' ) );
+
 							// Call the onSuccess function to handle the rest of the business:
 							// Pass in the form, the canvas, the canvas context:
 							opts.onSuccess($form, $canvas, ctx);
-							
 						} else {
 							
 							// Add 'mc-invalid' class to canvas:
@@ -187,6 +194,9 @@ jQuery.fn.motionCaptcha || (function($) {
 							// Write error message into canvas:
 							ctx.fillText(opts.errorMsg, 10, 24);
 							
+							// fail 이벤트 추가
+							$canvas.trigger( e = $.Event( 'fail.cs.motionCaptcha' ) );
+
 							// Pass off to the error callback to finish up:
 							opts.onError($form, $canvas, ctx);
 						}
@@ -199,19 +209,29 @@ jQuery.fn.motionCaptcha || (function($) {
 						// Write error message into canvas:
 						ctx.fillText(opts.errorMsg, 10, 24);
 
+						// fail 이벤트 추가
+						$canvas.trigger( e = $.Event( 'fail.cs.motionCaptcha' ) );
+						
 						// Pass off to the error callback to finish up:
 						opts.onError($form, $canvas, ctx);
 					}
 				}
+				
+				// end 이벤트 추가
+				$canvas.trigger( e = $.Event( 'end.cs.motionCaptcha' ) );
+
 				return false;
 			}; // mouseup/touchend event
 
 			// Bind events to canvas:
-			$canvas.bind({
-				mousedown:  touchStartEvent,
-				mousemove: touchMoveEvent,
-				mouseup:  touchEndEvent,
-			});
+			// 터치 기반이 아닌 환경에서만 마우스 이벤트 활성화
+            if(!("ontouchstart" in window)) {
+				$canvas.bind({
+					mousedown:  touchStartEvent,
+					mousemove: touchMoveEvent,
+					mouseup:  touchEndEvent,
+				});
+			};
 
 			// Mobile touch events:
 			$canvas[0].addEventListener('touchstart', touchStartEvent, false);
@@ -257,7 +277,7 @@ jQuery.fn.motionCaptcha || (function($) {
 	/**
 	 * Exposed default plugin settings, which can be overridden in plugin call.
 	 */
-	$.fn.motionCaptcha.defaults = {
+	$.fn.motioncaptcha.defaults = {
 		actionId: '#mc-action',     // The ID of the input containing the form action
 		divId: '#mc',               // If you use an ID other than '#mc' for the placeholder, pass it in here
 		canvasId: '#mc-canvas',     // The ID of the MotionCAPTCHA canvas element
@@ -272,8 +292,8 @@ jQuery.fn.motionCaptcha || (function($) {
 		canvasTextColor: '#111',
 		
 		// These messages are displayed inside the canvas after a user finishes drawing:
-		errorMsg: 'Please try again.',
-		successMsg: 'Captcha passed!',
+		errorMsg:"다시 시도해주세요.",
+        successMsg:"성공!",
 		
 		// This message is displayed if the user's browser doesn't support canvas:
 		noCanvasMsg: "Your browser doesn't support <canvas> - try Chrome, FF4, Safari or IE9.",
